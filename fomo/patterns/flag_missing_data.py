@@ -1,8 +1,10 @@
-# ADD ABILITY TO HAVE MULTIPLE COLUMNS TO QUERY
+# IMPORTANT: RESAMPLE DOESNT GO BACK TO FILL IN VALUES BEFORE
+# EX: PERSON 9 DOESNT HAVE DATA FOR THE FIRST PART SO NEED TO GO BACK AND FILL IN TRUE
+# FOR ALL CELLS BEFORE THE FIRST TIME POINT WITH DATA FOR THAT PERSON
 
 import pandas as pd
 
-def flag_missing_data(df, column_to_query, study_period=(), interval_size=5):
+def flag_missing_data(df, column_to_query, study_period=(), interval_size=15):
     """
     Flags missing data for a specific column within a given study period.
     Parameters:
