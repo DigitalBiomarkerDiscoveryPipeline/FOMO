@@ -1,5 +1,4 @@
-# ADD ABILITY TO DO FRACTIONS
-
+import numpy as np
 import pandas as pd
 from flag_missing_data import flag_missing_data
 
@@ -25,33 +24,39 @@ def missing_data_matrix(flagged_df, basis_rate=15, missingness_interval=15):
         raise Exception("No Missing Flags in provided dataframe")
 
     # Check if missingness_interval > basis_rate
-    if missingness_interval > basis_rate:
+    if missingness_interval < basis_rate:
         raise Exception("Resampling Error: missingness_interval must be greater than basis_rate.")
+
+    # Convert Missing_Flag to integer to calculate percentages later
+    flagged_df['Missing_Flag'] = flagged_df['Missing_Flag'].astype(int)
 
     # Create matrix
     matrix = flagged_df.pivot(index='person_id', columns='datetime', values='Missing_Flag')
 
-    return matrix
+    # Calculate the number of basis_rate intervals within each missingness_interval
+    intervals_per_group = missingness_interval // basis_rate
+
+    # Use rolling mean to calculate the percentage of missing values within each interval
+    # Note: The window size is set to intervals_per_group, and min_periods is set to 1 to ensure that we get a value even if there's only one non-missing value in the window.
+    resampled_matrix = matrix.rolling(window=intervals_per_group, axis=1, min_periods=1).mean()
+
+    # Since rolling mean includes the current and previous (window-1) columns, we need to select every intervals_per_group-th column to get non-overlapping intervals
+    resampled_matrix = resampled_matrix.iloc[:, intervals_per_group - 1::intervals_per_group]
+
+    return resampled_matrix
      
-
-"""
-Future possibilities:
-- Take in interval_size to resample based on missing_flags (i.e. resample to hour, and use decimal
-value for missingness that is the percent of non missing data there was in already flagged data based
-on missing_flag column)
-"""
-
 def run_mdm():
 
     heart_rate_data = pd.read_csv('sample_hr.csv')
+    print(heart_rate_data)
     heart_rate_data = heart_rate_data.drop('Unnamed: 0', axis=1)
     #print(heart_rate_data)
 
     flagged_data = flag_missing_data(heart_rate_data, 'heart_rate')
     print(flagged_data)
 
-    matrix = missing_data_matrix(flagged_data)
-    matrix.to_csv('output_matrix.csv')
+    matrix = missing_data_matrix(flagged_data, missingness_interval=60)
+    matrix.to_csv('matrix.csv')
     
 
 if __name__ == "__main__":
