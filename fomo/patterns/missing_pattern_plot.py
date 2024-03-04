@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 
 class MissingPatternPlot:
     """draw a heatmap of missingness for a given column"""
-    sort = ['person_id', 'missingness']
+    sort = ['person_id', 'missingness', 'cluster']
     direction = ['increasing', 'decreasing']
 
-    def __init__(self, data, column_to_query, study_period):
+    def __init__(self, data, column_to_query, study_period, cluster):
         # check if data is a dataframe
         if isinstance(data, pd.DataFrame):
             self.data = data
@@ -26,11 +26,12 @@ class MissingPatternPlot:
         
         # study period
         self.study_period = study_period
+        self.cluster = cluster
 
     @classmethod
-    def initialize(cls, data, column_to_query, study_period):
+    def initialize(cls, data, column_to_query, study_period, cluster):
       """function to initialize the class and parse the data"""
-      plot_data = cls(data, column_to_query, study_period)
+      plot_data = cls(data, column_to_query, study_period, cluster)
       plot_data.parse_data(data, column_to_query) # add study period later
 
       return plot_data
@@ -76,6 +77,25 @@ class MissingPatternPlot:
         plot_data = plot_data.drop('true_prop', axis=1)
 
         return plot_data
+
+    def sort_by_cluster(self, cluster):
+        # make a copy of the dataframe
+        plot_data = self.data.copy()
+
+        # add the cluster vector as a new column to the dataframe
+        plot_data['cluster'] = cluster
+
+        # sort the df by the 'cluster' column
+        df_sorted = plot_data.sort_values(by='cluster')
+
+        #print(df_sorted.head())
+
+        # drop cluster column
+        df_sorted = df_sorted.drop(columns='cluster')
+
+        return df_sorted
+
+        df_sorted
     
     def plot(self, sort=None, direction=True, x_label=True, y_label=True, x_ticks='auto', y_ticks='auto', title=None):
         """function to plot the missingness heatmap of the given column"""
@@ -121,6 +141,8 @@ class MissingPatternPlot:
                 plot_data = self.data.sort_index(axis=0, ascending=direction)
             elif sort == 'missingness':
                 plot_data = self.calc_missingness(direction)
+            elif sort == 'cluster':
+                plot_data = self.sort_by_cluster(self.cluster)
         else:
             raise ValueError("sort and direction must be valid inputs")
 
