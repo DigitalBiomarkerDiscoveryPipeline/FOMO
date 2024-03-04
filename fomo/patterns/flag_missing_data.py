@@ -49,11 +49,7 @@ def flag_missing_data(df, column_to_query, study_period=(), interval_size=15):
     all_intervals = pd.date_range(start=start_date, end=end_date, freq=f"{interval_size}min")
     all_df = pd.DataFrame([(person, interval) for person in all_people for interval in all_intervals], columns=['person_id', 'datetime'])
 
-    print(resampled)
     merged_df = pd.merge(all_df, resampled, on=['person_id', 'datetime'], how='left')
-    print("HHH")
-    print(merged_df)
-    print(merged_df.columns)
 
     # Create Missing_Flag column
     merged_df['Missing_Flag'] = merged_df[column_to_query].isna()
