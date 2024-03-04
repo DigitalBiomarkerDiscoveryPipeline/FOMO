@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from flag_missing_data import flag_missing_data
+from .flag_missing_data import flag_missing_data
 
 def missing_data_matrix(flagged_df, basis_rate=15, missingness_interval=15):
     """
