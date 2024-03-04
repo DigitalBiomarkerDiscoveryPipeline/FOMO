@@ -1,7 +1,3 @@
-# IMPORTANT: RESAMPLE DOESNT GO BACK TO FILL IN VALUES BEFORE
-# EX: PERSON 9 DOESNT HAVE DATA FOR THE FIRST PART SO NEED TO GO BACK AND FILL IN TRUE
-# FOR ALL CELLS BEFORE THE FIRST TIME POINT WITH DATA FOR THAT PERSON
-
 import pandas as pd
 
 def flag_missing_data(df, column_to_query, study_period=(), interval_size=15):
@@ -35,36 +31,51 @@ def flag_missing_data(df, column_to_query, study_period=(), interval_size=15):
         start_date = df['datetime'].min()
         end_date = df['datetime'].max()
 
+    start_date = round_to_nearest_interval(start_date, interval_size)
+    end_date = round_to_nearest_interval(end_date, interval_size)
+
     # Filter to only have study period
     df = df[(df['datetime'] >= start_date) & (df['datetime'] <= end_date)]
 
     # Group by person_id, resample based on interval_size provided
     df.set_index('datetime', inplace=True)
-    
-    # Resample data based on interval_size, take mean heart_rate of all entries in that time interval
-    resampled = df.groupby('person_id', as_index=False).resample(f'{interval_size}min').mean()
 
-    # Fill in person_id values for new rows from resampling
-    resampled.loc[:,'person_id'] = resampled.loc[:,'person_id'].ffill()
+    # Resample data based on interval_size, take mean heart_rate of all entries in that time interval
+    resampled = df.groupby('person_id', as_index=False).resample(f'{interval_size}min').mean().reset_index()
+    #resampled['datetime'] = resampled['datetime'].apply(lambda dt: round_to_nearest_interval(dt, interval_size))
+
+    # Make sure there is a row in the DataFrame for every person for every time point
+    all_people = df['person_id'].unique()
+    all_intervals = pd.date_range(start=start_date, end=end_date, freq=f"{interval_size}min")
+    all_df = pd.DataFrame([(person, interval) for person in all_people for interval in all_intervals], columns=['person_id', 'datetime'])
+
+    print(resampled)
+    merged_df = pd.merge(all_df, resampled, on=['person_id', 'datetime'], how='left')
+    print("HHH")
+    print(merged_df)
+    print(merged_df.columns)
 
     # Create Missing_Flag column
-    resampled['Missing_Flag'] = resampled[column_to_query].isna()
+    merged_df['Missing_Flag'] = merged_df[column_to_query].isna()
     
-    # Prepare data to be returned
-    resampled = resampled.reset_index().drop('level_0', axis=1)
-    resampled = resampled[['person_id', 'datetime', column_to_query, 'Missing_Flag']]
-    resampled = resampled.astype({'person_id': int})
+    return merged_df[['person_id', 'datetime', column_to_query, 'Missing_Flag']]
 
-    return resampled
+def round_to_nearest_interval(dt, interval_size):
+    """
+    Rounds a datetime object to the nearest interval (always rounds down).
+    """
+    rounded_minute = (dt.minute // interval_size) * interval_size
+    return dt.replace(minute=rounded_minute, second=0, microsecond=0)
+
 
 def run_fmd():
 
     heart_rate_data = pd.read_csv('sample_hr.csv')
     heart_rate_data = heart_rate_data.drop('Unnamed: 0', axis=1)
-    print(heart_rate_data)
+    #print(heart_rate_data)
 
     flagged_data = flag_missing_data(heart_rate_data, 'heart_rate')
-    flagged_data.to_csv('output.txt', sep='\t', index=False)
+    #flagged_data.to_csv('output.txt', sep='\t', index=False)
 
 if __name__ == "__main__":
     run_fmd()
