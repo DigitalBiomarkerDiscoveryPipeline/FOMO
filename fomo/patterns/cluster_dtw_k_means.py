@@ -13,12 +13,13 @@ class Cluster_DTW_KMeans(TimeSeriesKMeans):
 
     def __init__(self, n_clusters):
         super().__init__(n_clusters, metric='dtw')
+        self.reshaped_missing_data_matrix = None
 
     def fit(self, missing_data_matrix):
         # Some reshaping of missing_data_matrix
         reshaped_missing_data_matrix = to_time_series_dataset(missing_data_matrix)
         
-        return super().fit(reshaped_missing_data_matrix)  
+        return super().fit(reshaped_missing_data_matrix)
 
     @classmethod
     def find_n_clusters(cls, missing_data_matrix, clusters: list, method: str):
