@@ -44,6 +44,8 @@ class Cluster_DTW_KMeans(TimeSeriesKMeans):
             plt.axvline(x=elbow_point, color='black', linestyle='--')
 
             plt.show()
+
+            return elbow_point
         
         elif method == 'silhouette':
             # calculate the silhouette score for each number of clusters
@@ -70,6 +72,8 @@ class Cluster_DTW_KMeans(TimeSeriesKMeans):
 
             plt.show()
             
+            return optimal_k
+
         elif method == 'gap':
             # set max reference distributions
             nrefs = 5
