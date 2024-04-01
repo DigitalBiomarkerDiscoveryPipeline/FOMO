@@ -41,7 +41,7 @@ def missing_data_matrix(flagged_df, basis_rate=15, missingness_interval=15):
     resampled_matrix = matrix.rolling(window=intervals_per_group, axis=1, min_periods=1).mean()
 
     # Since rolling mean includes the current and previous (window-1) columns, we need to select every intervals_per_group-th column to get non-overlapping intervals
-    resampled_matrix = resampled_matrix.iloc[:, ::intervals_per_group]
+    resampled_matrix = resampled_matrix.iloc[:, [0] + [i for i in range(1, len(resampled_matrix.columns), intervals_per_group)]]
 
     return resampled_matrix
      
