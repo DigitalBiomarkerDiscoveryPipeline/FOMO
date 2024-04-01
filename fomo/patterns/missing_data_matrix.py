@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from .flag_missing_data import flag_missing_data
 
-def missing_data_matrix(flagged_df, basis_rate=15, missingness_interval=15):
+def missing_data_matrix(flagged_df, basis_rate=15, missingness_interval=15, person_index=False):
     """
     Converts missing flagged data into matrix where each row is one participant
     and each column is one time point. The Value in each index represents 
@@ -14,6 +14,7 @@ def missing_data_matrix(flagged_df, basis_rate=15, missingness_interval=15):
     - missingness_interval: For fractional missingness, how big of interval to consider in final matrix.
     Fractional missingness = (number of basis_rate intervals with data)/(how many basis_rate intervals
     within missingness_interval)
+    - person_index: have person_id as index (False, default) or as column (True)
 
     Returns: 
     - DataFrame matrix as described
@@ -31,7 +32,11 @@ def missing_data_matrix(flagged_df, basis_rate=15, missingness_interval=15):
     flagged_df['Missing_Flag'] = flagged_df['Missing_Flag'].astype(int)
 
     # Create matrix
-    matrix = flagged_df.pivot(index='person_id', columns='datetime', values='Missing_Flag').reset_index()
+    if not person_index:
+        matrix = flagged_df.pivot(index='person_id', columns='datetime', values='Missing_Flag').reset_index()
+    
+    else:
+        matrix = flagged_df.pivot(index='person_id', columns='datetime', values='Missing_Flag')
 
     # Calculate the number of basis_rate intervals within each missingness_interval
     intervals_per_group = missingness_interval // basis_rate
