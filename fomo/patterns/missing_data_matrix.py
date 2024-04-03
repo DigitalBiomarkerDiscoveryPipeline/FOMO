@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from .flag_missing_data import flag_missing_data
 
-def missing_data_matrix(flagged_df, basis_rate=15, missingness_interval=15, person_index=False):
+def missing_data_matrix(flagged_df, basis_rate=15, missingness_interval=15, person_index=True):
     """
     Converts missing flagged data into matrix where each row is one participant
     and each column is one time point. The Value in each index represents 
@@ -14,7 +14,7 @@ def missing_data_matrix(flagged_df, basis_rate=15, missingness_interval=15, pers
     - missingness_interval: For fractional missingness, how big of interval to consider in final matrix.
     Fractional missingness = (number of basis_rate intervals with data)/(how many basis_rate intervals
     within missingness_interval)
-    - person_index: have person_id as index (False, default) or as column (True)
+    - person_index: have person_id as index (True, default) or as column (False)
 
     Returns: 
     - DataFrame matrix as described
@@ -46,7 +46,13 @@ def missing_data_matrix(flagged_df, basis_rate=15, missingness_interval=15, pers
     resampled_matrix = matrix.rolling(window=intervals_per_group, axis=1, min_periods=1).mean()
 
     # Since rolling mean includes the current and previous (window-1) columns, we need to select every intervals_per_group-th column to get non-overlapping intervals
-    resampled_matrix = resampled_matrix.iloc[:, [0] + [i for i in range(1, len(resampled_matrix.columns), intervals_per_group)]]
+    if not person_index:
+        #Include person_id column in final matrix
+        resampled_matrix = resampled_matrix.iloc[:, [0] + [i for i in range(0, len(resampled_matrix.columns), intervals_per_group)]]
+    
+    else:      
+        # person_id already index of final matrix                                  
+        resampled_matrix = resampled_matrix.iloc[:, [i for i in range(1, len(resampled_matrix.columns), intervals_per_group)]]
 
     return resampled_matrix
      
