@@ -26,7 +26,7 @@ def generate_spectrogram(person_missing_data, missingness_interval, window_lengt
     fs = 1 / missingness_interval
 
     # Calculate nperseg
-    nperseg = window_length_minutes / missingness_interval
+    nperseg = window_length_minutes // missingness_interval
 
     # Calculate nfft
     nfft = None if zero_pad == 0 else nperseg+zero_pad
