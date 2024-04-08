@@ -97,7 +97,7 @@ class MissingPatternPlot:
 
         df_sorted
     
-    def plot(self, sort=None, direction=True, x_label=True, y_label=True, x_ticks='auto', y_ticks='auto', title=None):
+    def plot(self, sort=None, direction=True, x_label=True, y_label=True, x_ticks='auto', y_ticks='auto', title=None, cmap='plasma', color_bar=False, fig_size=(15, 15)):
         """function to plot the missingness heatmap of the given column"""
         """
         Parameters
@@ -128,6 +128,14 @@ class MissingPatternPlot:
             if true: use the row index, if false: no ticks
             if list: use the list
             if int: take every nth label from the column names
+        title: str
+            title for the plot
+        cmap: str
+            color map for the plot
+        color_bar: bool
+            whether to show the color bar
+        fig_size: tuple
+            size of the plot
         """
 
         # PLOT HEURISTICS
@@ -167,7 +175,7 @@ class MissingPatternPlot:
         plot_x_ticks = None
         plot_y_ticks = None
         if isinstance(x_ticks, bool):
-            plot_x_ticks = plot_data.columns if x_ticks else None
+            plot_x_ticks = plot_data.columns if x_ticks else False
         elif isinstance(x_ticks, list) or isinstance(x_ticks, int):
             plot_x_ticks = x_ticks
         elif isinstance(x_ticks, str) and x_ticks == 'auto':
@@ -176,7 +184,7 @@ class MissingPatternPlot:
             raise ValueError("x_ticks must be a bool, list, or integer")
 
         if isinstance(y_ticks, bool):
-            plot_y_ticks = plot_data.index if y_ticks else None
+            plot_y_ticks = plot_data.index if y_ticks else False
         elif isinstance(y_ticks, list) or isinstance(y_ticks, int):
             plot_y_ticks = y_ticks
         elif isinstance(y_ticks, str) and y_ticks == 'auto':
@@ -185,10 +193,11 @@ class MissingPatternPlot:
             raise ValueError("y_ticks must be a bool, list, or integer")
 
         # plot the heatmap
-        plt.figure(figsize=(15, 15))
-        sns.heatmap(plot_data, cbar=False, xticklabels=plot_x_ticks, yticklabels=plot_y_ticks, cmap='plasma')
+        plt.figure(figsize=fig_size)
+        ax = sns.heatmap(plot_data, cbar=color_bar, xticklabels=plot_x_ticks, yticklabels=plot_y_ticks, cmap=cmap)
         plt.xlabel(plot_x_label)
         plt.ylabel(plot_y_label)
+        ax.tick_params(left=True, bottom=True)
         if isinstance(title, str):
             plt.title(f"Missingness Plot for {title}")
         elif self.column_to_query:
