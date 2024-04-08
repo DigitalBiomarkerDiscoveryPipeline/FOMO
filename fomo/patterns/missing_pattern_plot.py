@@ -90,10 +90,26 @@ class MissingPatternPlot:
 
         #print(df_sorted.head())
 
+        # cluster column
+        cluster_column = df_sorted['cluster']
+
+        # get index of change in cluster_column values
+        cluster_change = np.where(cluster_column.diff().fillna(0) != 0)[0]
+        cluster_change = np.insert(cluster_change, 0, 0)
+        cluster_change = [int(i) for i in cluster_change]
+        cluster_change.append(len(cluster_column))
+
+        # get midpoints between values in cluster_change
+        cluster_midpoints = [(cluster_change[i] + cluster_change[i+1])//2 for i in range(len(cluster_change)-1)]
+
+        # get cluster labels
+        cluster_labels = df_sorted['cluster'].unique()
+        cluster_labels = ['cluster ' + str(int(i)) for i in cluster_labels]
+
         # drop cluster column
         df_sorted = df_sorted.drop(columns='cluster')
 
-        return df_sorted
+        return df_sorted, cluster_change, cluster_midpoints, cluster_labels
 
         df_sorted
     
@@ -141,6 +157,9 @@ class MissingPatternPlot:
         # PLOT HEURISTICS
         # data for the plot
         plot_data = self.data
+        cluster_change = None
+        cluster_labels = None
+        cluster_midpoints = None
         # sort the data by sort and direction
         if sort is None:
             plot_data = self.data
@@ -150,7 +169,7 @@ class MissingPatternPlot:
             elif sort == 'missingness':
                 plot_data = self.calc_missingness(direction)
             elif sort == 'cluster':
-                plot_data = self.sort_by_cluster(self.cluster)
+                plot_data, cluster_change, cluster_midpoints, cluster_labels = self.sort_by_cluster(self.cluster)
         else:
             raise ValueError("sort and direction must be valid inputs")
 
@@ -197,12 +216,19 @@ class MissingPatternPlot:
         ax = sns.heatmap(plot_data, cbar=color_bar, xticklabels=plot_x_ticks, yticklabels=plot_y_ticks, cmap=cmap)
         plt.xlabel(plot_x_label)
         plt.ylabel(plot_y_label)
+        if sort == 'cluster':
+            sec = ax.secondary_yaxis(location=0)
+            sec.set_yticks(cluster_change, labels=[])
+            sec.tick_params('y', length=45, width=2)
+
+            sec2 = ax.secondary_yaxis(location=0)
+            sec2.set_yticks(cluster_midpoints, labels=cluster_labels)
+            sec2.tick_params('y', length=60, width=0)
         ax.tick_params(left=True, bottom=True)
         if isinstance(title, str):
-            plt.title(f"Missingness Plot for {title}")
+            plt.title(f"{title}")
         elif self.column_to_query:
             plt.title(f"Missingness Plot for {self.column_to_query}")
         else:
             plt.title(f"Missingness Plot")
-        plt.show()
             
