@@ -2,9 +2,10 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 class MissingPatternPlot:
-    """draw a heatmap of missingness for a given column"""
+    """wrapper class to draw a heatmap of missingness for a given matrix"""
     sort = ['person_id', 'missingness', 'cluster']
     direction = ['increasing', 'decreasing']
 
@@ -32,7 +33,7 @@ class MissingPatternPlot:
     def initialize(cls, data, column_to_query, study_period, cluster):
       """function to initialize the class and parse the data"""
       plot_data = cls(data, column_to_query, study_period, cluster)
-      plot_data.parse_data(data, column_to_query) # add study period later
+      plot_data.parse_data(plot_data.data, plot_data.column_to_query) # add study period later
 
       return plot_data
 
@@ -224,6 +225,42 @@ class MissingPatternPlot:
             sec2 = ax.secondary_yaxis(location=0)
             sec2.set_yticks(cluster_midpoints, labels=cluster_labels)
             sec2.tick_params('y', length=60, width=0)
+        
+        if plot_x_ticks == 'auto' and isinstance(plot_data.columns, pd.DatetimeIndex):
+            # get the earliest and latest date from the data
+            earliest = plot_data.columns.min()
+            latest = plot_data.columns.max()
+            print(earliest, latest)
+
+            # get the number of days between the first and last date
+            num_days = abs((latest - earliest).days)
+            print(num_days)
+
+            # set the formatting of x axis based on range
+            formatter = None
+            locator = None
+            if num_days < 2:
+                locator = mdates.HourLocator(interval=2)
+                formatter = mdates.DateFormatter('%H:%M')
+            elif num_days < 10:
+                locator = mdates.HourLocator(interval=6)
+                formatter = mdates.DateFormatter('%b-%d %H:%M')
+            elif num_days < 30:
+                locator = mdates.DayLocator()
+                formatter = mdates.DateFormatter('%b-%d')
+            elif num_days < 90:
+                locator = mdates.WeekdayLocator()
+                formatter = mdates.DateFormatter('%m-%d')
+            elif num_days < 365:
+                locator = mdates.MonthLocator()
+                formatter = mdates.DateFormatter('%b')
+            else:
+                locator = mdates.YearLocator()
+                formatter = mdates.DateFormatter('%Y')
+            
+            ax.xaxis.set_major_locator(locator)
+            ax.xaxis.set_major_formatter(formatter)
+
         ax.tick_params(left=True, bottom=True)
         if isinstance(title, str):
             plt.title(f"{title}")
