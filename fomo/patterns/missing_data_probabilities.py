@@ -47,7 +47,8 @@ def missing_data_probabilities(flagged_df, time_column, axes, basis_rate=15, mis
 
     # Use rolling mean to calculate the percentage of missing values within each interval
     # Note: The window size is set to intervals_per_group, and min_periods is set to 1 to ensure that we get a value even if there's only one non-missing value in the window.
-    resampled_matrix = matrix.rolling(window=intervals_per_group, axis=0, min_periods=1).mean()
+    indexer = pd.api.indexers.FixedForwardWindowIndexer(window_size=intervals_per_group) # makes sure that the timestamp for missing_data_matrix represents the beginning of the interval
+    resampled_matrix = matrix.rolling(window=indexer, axis=0, min_periods=1).mean()
 
     # let the index be just numbers and move the datatime to be a new column
     resampled_matrix = resampled_matrix.reset_index()
