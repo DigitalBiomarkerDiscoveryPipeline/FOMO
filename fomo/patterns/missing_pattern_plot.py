@@ -110,6 +110,10 @@ class MissingPatternPlot:
         # drop cluster column
         df_sorted = df_sorted.drop(columns='cluster')
 
+        # make sure the column headers are datetime objects
+        if not isinstance(df_sorted.columns, pd.DatetimeIndex):
+            df_sorted.columns = pd.to_datetime(df_sorted.columns)
+
         return df_sorted, cluster_change, cluster_midpoints, cluster_labels
 
         df_sorted
@@ -251,6 +255,9 @@ class MissingPatternPlot:
             elif num_days < 90:
                 locator = mdates.WeekdayLocator()
                 formatter = mdates.DateFormatter('%m-%d')
+            elif num_days < 180:
+                locator = mdates.WeekdayLocator()
+                formatter = mdates.DateFormatter('%b-%d')
             elif num_days < 365:
                 locator = mdates.MonthLocator()
                 formatter = mdates.DateFormatter('%b')
