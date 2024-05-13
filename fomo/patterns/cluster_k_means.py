@@ -1,12 +1,10 @@
-import sklearn
-from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
-from sklearn.metrics import silhouette_score
+from collections import defaultdict
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
-from collections import defaultdict
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+
 
 class Cluster_KMeans(KMeans):
     """Wrapper class for SKLearn KMeans, with relevant pre-processing and tools for clustering."""

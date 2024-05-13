@@ -218,7 +218,10 @@ class MissingPatternPlot:
 
         # plot the heatmap
         plt.figure(figsize=fig_size)
-        ax = sns.heatmap(plot_data, cbar=color_bar, xticklabels=plot_x_ticks, yticklabels=plot_y_ticks, cmap=cmap)
+        #ax = sns.heatmap(plot_data, cbar=color_bar, xticklabels=plot_x_ticks, yticklabels=plot_y_ticks, cmap=cmap)
+        ax = plt.gca()
+        cax = ax.pcolormesh(plot_data.columns.values, plot_data.index, plot_data.to_numpy(), cmap='Blues')
+        plt.gcf().colorbar(cax)
         plt.xlabel(plot_x_label)
         plt.ylabel(plot_y_label)
         if sort == 'cluster':
