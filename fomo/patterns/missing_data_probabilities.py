@@ -62,17 +62,21 @@ def missing_data_probabilities(flagged_df, time_column, axes, basis_rate=15, mis
     # get and store the unique time values, day values, and number of weeks
     time_values = resampled_matrix[time_column].dt.strftime('%H:%M').unique()
     day_values = resampled_matrix[time_column].dt.day_name().unique()
+    month_values = resampled_matrix[time_column].dt.month_name().unique()
     num_weeks = np.ceil(len(resampled_matrix) / (len(day_values) * len(time_values))).astype(int)
 
     # create intermediate pandas df that contains all values needed to calculate any set of input axes
     missingness_matrix_week = resampled_matrix.copy()
     
     # every set of len(day_values) * len(time_values) rows will have the same week value up to the last value in the matrix
+    missingness_matrix_week['Month'] = resampled_matrix[time_column].dt.month_name()
+    missingness_matrix_week['Cal-Day'] = resampled_matrix[time_column].dt.day
     missingness_matrix_week['Week'] = np.repeat(np.arange(num_weeks), len(day_values) * len(time_values))[:len(resampled_matrix)]
+    missingness_matrix_week['Day'] = resampled_matrix[time_column].dt.day_name()
+    missingness_matrix_week['Time'] = resampled_matrix[time_column].dt.strftime('%H:%M')
     missingness_matrix_week['Full-Time'] = resampled_matrix[time_column].dt.day_name() + missingness_matrix_week['Week'].astype(str) + ':' + resampled_matrix[time_column].dt.strftime('%H:%M')
     missingness_matrix_week['Day-Week'] = resampled_matrix[time_column].dt.day_name() + missingness_matrix_week['Week'].astype(str)
     missingness_matrix_week['Day-Time'] = resampled_matrix[time_column].dt.day_name() + resampled_matrix[time_column].dt.strftime('%H:%M')
-    missingness_matrix_week['Time'] = resampled_matrix[time_column].dt.strftime('%H:%M')
     day_week_values = missingness_matrix_week['Day-Week'].unique()
 
     # keep only the time and missingness columns, rename the missingness column to Missing_Fraction, and reset the index
@@ -117,6 +121,49 @@ def missing_data_probabilities(flagged_df, time_column, axes, basis_rate=15, mis
 
             # create the 3d tensor by taking every len(day_values) rows and stacking them on top of each other
             unflattened_matrix = full_unflattened_day_matrix.reshape(num_weeks, len(day_values), len(time_values)) # note: day-week tensor is a weeks x days (Sun-Sat) x time_of_day (0-24) (depth x row x column)
+        elif axes == ['week', 'year'] or axes == ['year', 'week']:
+            """in this case, we aggregate the missingness on a per-day level (Monday0_Missingness, Monday1_Missingness...) and aggregate over weeks"""
+
+            """ in this part, we calculate the average missingness per day_of_week for each month. it has been verified that this averaging takes into account the number
+                of each day_of_week for that month in a particular year (Ex. There are 5 Fridays in June, 2021). Currently, the data missing for each weekday in a month
+                is not appended as nan (as depending on the case, this might make it impossible to calculate week-year stats.) Thus, the probabilities here is only for
+                given data.
+            """
+            # group by 'Week' and 'Day' and calculate the average of 'Missing_Fraction' for each day-week item
+            unflattened_day_matrix = missingness_matrix_week.groupby(['Month', 'Cal-Day', 'Day'])['Missing_Fraction'].mean().reset_index()
+
+            # group by 'Month' and 'Day'
+            unflattened_day_matrix = unflattened_day_matrix.groupby(['Month', 'Day'])['Missing_Fraction'].mean().reset_index()
+            
+            # create a pivoted matrix where the index is the unique day, the columns are each week, and the value is the missingness
+            unflattened_day_matrix = unflattened_day_matrix.pivot(index='Month', columns='Day', values='Missing_Fraction')
+            
+            # map month names to calendar order
+            month_order = {
+                'January': 1, 'February': 2, 'March': 3,
+                'April': 4, 'May': 5, 'June': 6,
+                'July': 7, 'August': 8, 'September': 9,
+                'October': 10, 'November': 11, 'December': 12
+            }
+            day_order = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+            # sort by day_order
+            unflattened_day_matrix = unflattened_day_matrix[day_order]
+            
+            # add a new column for the month order
+            unflattened_day_matrix['Month_Order'] = [month_order[month] for month in unflattened_day_matrix.index]
+
+            # sort the DataFrame by this new column
+            unflattened_day_matrix = unflattened_day_matrix.sort_values('Month_Order')
+
+            unflattened_day_matrix = unflattened_day_matrix.drop('Month_Order', axis=1)
+
+            # transform pands df into 2d numpy array where each row is a day of the month and each column is a day of week
+            full_unflattened_day_matrix = unflattened_day_matrix.to_numpy() # note: month_of_year x day_of_week that is full
+
+            # create the 3d tensor by taking every len(day_values) rows and stacking them on top of each other
+            unflattened_matrix = full_unflattened_day_matrix.reshape(-1, len(month_values), len(day_values)) 
+
         else:
             raise Exception("Invalid axes input")
         
