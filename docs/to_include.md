@@ -5,6 +5,9 @@
 * Weekly vizualizations
 * Rolling patterns
 
+# Double check
+* which function had the single offset? Was it missing data probabilities or missing data matrix?
+
 # Would be nice
 ## More likely
 * parallelization integration with p_tqdm
