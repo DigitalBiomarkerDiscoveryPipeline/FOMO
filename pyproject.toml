@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fomo"
+version = "0.1.0"
+description = "Python package for analyzing and handling wearable device data missingness"
+readme = "README.md"
+
+[tool.setuptools.packages.find]
+where = ["."]
