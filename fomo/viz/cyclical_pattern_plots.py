@@ -80,33 +80,3 @@ def cluster_pattern_plots(time_series_matrix, labels, axes = None, noscale_label
         
         ax.set_title(f"n={len(clust_data)}")
     return fig, axes
-
-if __name__ == '__main__':
-    ######### Sample Usage:
-    pts_wclust=read_from_cloud('2year_minrange02_dtw_4h_wclust.csv')
-    aggloDTW_labels = pts_wclust['cluster'].replace({3: 0, 1 : 0, 2:0, 7 :1, 6:1})
-    day_cluster_pattern_plots(scaled_variable, aggloDTW_labels, ncols=1)
-    plt.tight_layout()
-
-
-    ########## Sample Usage with added in inconsistent missingness
-    aggloDTW_labels
-    mod_aggloDTW_labels = aggloDTW_labels.copy()
-    label_map = {0: 2, 1:3, 2:0, 3:1, 4:0}
-    for original_value, mod_value in label_map.items():
-        mod_aggloDTW_labels[aggloDTW_labels == original_value] = mod_value
-
-    flat_rows = data_matrix[row_ranges < min_range]
-    flat_missing_level = flat_rows.mean(axis=1)
-
-    flat_low_missing = flat_rows[flat_missing_level <= 0.5]
-    flat_high_missing = flat_rows[flat_missing_level > 0.5]
-    # scaled_flat = StandardScaler(with_std=False).fit_transform(flat_rows.T).T
-    # scaled_flat = flat_rows
-    all_scaled = np.concatenate([scaled_variable, flat_low_missing, flat_high_missing])
-    low_missing_labels = np.full(len(flat_low_missing), 999)
-    high_missing_labels = np.full(len(flat_high_missing), 998)
-    # unclustered_labels = np.full(len(scaled_flat), 999)
-    all_labels = np.concatenate([mod_aggloDTW_labels, low_missing_labels, high_missing_labels])
-
-    day_cluster_pattern_plots(all_scaled, all_labels, noscale_labels = [998, 999], ncols=1)
