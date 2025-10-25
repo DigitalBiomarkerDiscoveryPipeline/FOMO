@@ -23,15 +23,34 @@ def plot_time_series_by_cluster(time_series, labels, ylim=(0,1), ncols=5):
         axs.flatten()[i].set_title(f"Time Series in Cluster {label}")
     return fig, axs
 
-def plot_cluster_pattern_plots(time_series, labels, noscale_labels = [], ncols = 3):
+def plot_day_cluster_pattern_plots(time_series_matrix, labels, axes, noscale_labels = [], ncols = 1):
+    '''Plot all day-level pattern plot 1-D heatmaps based on cluster labels.
+    
+    Parameters
+    ----------
+    time_series_matrix: np.array
+        2-D matrix of time series data, which has shape ([number of time series in matrix], [length of each time series])
+    labels: array-like
+        Array of labels corresponding to each time series in `time_series_matrix`
+    axes: matplotlib Axes array (default: None)
+        Array of matplotlib axes for plotting the heatmaps. If None is provided, a fig and axes will be created.
+    noscale_labels: list (default: [])
+        List of labels found in `labels` which should not be passed through MinMaxScaler
+    ncols: int (default: 1)
+        Number of columns in figure. The number of rows will be calculated to fit '''
     unique_labels = np.unique(labels)
     
     nrows = int(np.ceil(len(unique_labels) / ncols))
 
-    fig, axes = plt.subplots(nrows, ncols, figsize=(4*ncols, 1 * nrows))
+    if axes is None:
+        fig, axes = plt.subplots(nrows, ncols, figsize=(4*ncols, 1 * nrows))
+    else:
+        fig = plt.gcf()
+        if  np.prod(axes.shape) < len(unique_labels):
+            raise ValueError(f'Provided array of axes is too small. Expected at least {len(unique_labels)} axes, but provided axes array has only {np.prod(axes.shape)}')
     
     for label, ax in zip(unique_labels, axes.flatten()):
-        clust_data = time_series[labels == label]
+        clust_data = time_series_matrix[labels == label]
         barycenter = softdtw_barycenter(clust_data, gamma=1., max_iter=50, tol=1e-3)
         if label in noscale_labels:
             scaled_barycenter = barycenter.flatten()
