@@ -37,7 +37,13 @@ def day_cluster_pattern_plots(time_series_matrix, labels, axes, noscale_labels =
     noscale_labels: list (default: [])
         List of labels found in `labels` which should not be passed through MinMaxScaler
     ncols: int (default: 1)
-        Number of columns in figure. The number of rows will be calculated to fit '''
+        Number of columns in figure. The number of rows will be calculated to fit the number of unique patterns
+    
+    Returns
+    -------
+    fig: matplotlib Figure
+    axes: matplotlib Axes
+    '''
     unique_labels = np.unique(labels)
     
     nrows = int(np.ceil(len(unique_labels) / ncols))
