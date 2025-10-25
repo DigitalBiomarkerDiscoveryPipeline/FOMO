@@ -1,4 +1,7 @@
 from tslearn.barycenters import softdtw_barycenter
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
 
 def plot_time_series_by_cluster(time_series, labels, ylim=(0,1), ncols=5):
     """Patterns as line plots"""
