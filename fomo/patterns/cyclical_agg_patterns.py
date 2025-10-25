@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 
-def missing_data_probabilities_new(flagged_df, time_column, axes, basis_rate=15, missingness_interval=15, missing_flags_column='Missing_Flag'):
+def cyclical_agg_pattern(flagged_df, time_column, axes=['day'], basis_rate=15, missingness_interval=15, missing_flags_column='Missing_Flag'):
     """
-    Calculate missingness probability and variance matrices (or tensors) along a time axis
+    Calculate cyclical missingness probability and variance matrices along a time axis
     An axis can be "day", "week", "year"
     
     Parameters
@@ -48,7 +48,7 @@ def missing_data_probabilities_new(flagged_df, time_column, axes, basis_rate=15,
     # Use rolling mean to calculate the percentage of missing values within each interval
     # Note: The window size is set to intervals_per_group, and min_periods is set to 1 to ensure that we get a value even if there's only one non-missing value in the window.
     indexer = pd.api.indexers.FixedForwardWindowIndexer(window_size=intervals_per_group) # makes sure that the timestamp for missing_data_matrix represents the beginning of the interval
-    resampled_matrix = matrix.rolling(window=indexer, axis=0, min_periods=1).mean()
+    resampled_matrix = matrix.rolling(window=indexer, min_periods=1).mean()
 
     # let the index be just numbers and move the datatime to be a new column
     resampled_matrix = resampled_matrix.reset_index()
@@ -170,26 +170,3 @@ def missing_data_probabilities_new(flagged_df, time_column, axes, basis_rate=15,
     missingness_var = np.nanvar(unflattened_matrix, axis=0)
 	  
     return missingness_avg, missingness_var
-
-
-## Usage
-# Make a matrix where each row is one participant
-data_matrix = np.zeros((len(selected_week_files),24*7))
-
-def get_missingness_avg(file):
-    person_df = pd.read_parquet(file, engine='pyarrow').reset_index()
-    missingness_avg, missingness_var = missing_data_probabilities_new(person_df, time_column='index', axes=['day', 'week'], missingness_interval=60)
-    
-    # Flatten the data matrix
-    missingness_avg = missingness_avg.to_numpy().flatten()
-    unscaled_missing_avg = missingness_avg
-    
-    return unscaled_missing_avg
-
-
-avgs = p_map(get_missingness_avg, selected_week_files)
-
-for i, unscaled_array,  in enumerate(avgs):
-    data_matrix[i, :] = unscaled_array
-
-np.save('2year_dayweek_avg_full.npy', data_matrix)
