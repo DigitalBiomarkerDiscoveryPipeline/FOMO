@@ -30,7 +30,7 @@ def flag_missing_data(df : pd.DataFrame, start_date = None, end_date = None, tim
     # convert time_col to pandas datetime    
     df[time_col] = pd.to_datetime(df[time_col])
 
-    # TODO: resample time_col to given freq
+    # TODO: resample time_col to given freq .dt.floor(freq) should do it
     
     # check if start_date and end_date are defined
     if start_date is None:
@@ -45,8 +45,8 @@ def flag_missing_data(df : pd.DataFrame, start_date = None, end_date = None, tim
 
     date_range = pd.date_range(start=start_date, end=end_date, freq=freq)
 
-    flagged_df = pd.DataFrame(inex=date_range)
-    flagged_df['Missing_flag'] = 1
+    flagged_df = pd.DataFrame(index=date_range)
+    flagged_df['Missing_Flag'] = 1
     flagged_df.loc[df[time_col], 'Missing_Flag'] = 0
 
     return flagged_df
