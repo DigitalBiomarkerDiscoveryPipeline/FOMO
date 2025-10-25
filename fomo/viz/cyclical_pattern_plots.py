@@ -1,4 +1,7 @@
 from tslearn.barycenters import softdtw_barycenter
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
 
 def plot_time_series_by_cluster(time_series, labels, ylim=(0,1), ncols=5):
     """Patterns as line plots"""
@@ -20,28 +23,53 @@ def plot_time_series_by_cluster(time_series, labels, ylim=(0,1), ncols=5):
         axs.flatten()[i].set_title(f"Time Series in Cluster {label}")
     return fig, axs
 
-def plot_cluster_pattern_plots(time_series, labels, noscale_labels = [], ncols = 3):
+def cluster_pattern_plots(time_series_matrix, labels, axes = None, noscale_labels = [], ncols = 1):
+    '''Plot day-level (1D) or week-level (2D) pattern plot heatmaps as the barycenter of each cluster.
+    
+    Parameters
+    ----------
+    time_series_matrix: np.array
+        2-D matrix of time series data, which has shape ([number of time series in matrix], [length of each time series])
+    labels: array-like
+        Array of labels corresponding to each time series in `time_series_matrix`
+    axes: matplotlib Axes array (default: None)
+        Array of matplotlib axes for plotting the heatmaps. If None is provided, a fig and axes will be created.
+    noscale_labels: list (default: [])
+        List of labels found in `labels` which should not be passed through MinMaxScaler
+    ncols: int (default: 1)
+        Number of columns in figure. The number of rows will be calculated to fit the number of unique patterns
+    
+    Returns
+    -------
+    fig: matplotlib Figure
+    axes: matplotlib Axes
+    '''
     unique_labels = np.unique(labels)
     
     nrows = int(np.ceil(len(unique_labels) / ncols))
 
-    fig, axes = plt.subplots(nrows, ncols, figsize=(4*ncols, 1 * nrows))
+    if axes is None:
+        fig, axes = plt.subplots(nrows, ncols, figsize=(4*ncols, 1 * nrows))
+    else:
+        fig = plt.gcf()
+        if  np.prod(axes.shape) < len(unique_labels):
+            raise ValueError(f'Provided array of axes is too small. Expected at least {len(unique_labels)} axes, but provided axes array has only {np.prod(axes.shape)}')
     
     for label, ax in zip(unique_labels, axes.flatten()):
-        clust_data = time_series[labels == label]
+        clust_data = time_series_matrix[labels == label]
         barycenter = softdtw_barycenter(clust_data, gamma=1., max_iter=50, tol=1e-3)
         if label in noscale_labels:
             scaled_barycenter = barycenter.flatten()
         else:
             scaled_barycenter = MinMaxScaler().fit_transform(barycenter).flatten()
-        if len(scaled_barycenter.shape) == 2: # day level plotting
+        if len(scaled_barycenter.shape) == 1: # day level plotting
             cax = ax.pcolormesh(np.expand_dims(scaled_barycenter,axis=0), cmap='Blues_r',
                             vmin = 0,
                             vmax = 1)#, edgecolors='k', linewidth=0.1)
             ax.set_yticks([0,1])
             ax.set_yticklabels([' ', ' '])
 
-        elif len(scaled_barycenter.shape) == 3: # week level plotting
+        elif len(scaled_barycenter.shape) == 2: # week level plotting
             cax = ax.pcolormesh(scaled_barycenter[::-1], cmap='Blues_r',
                            vmin = 0,
                            vmax = 1)#, edgecolors='k', linewidth=0.1)
@@ -52,34 +80,3 @@ def plot_cluster_pattern_plots(time_series, labels, noscale_labels = [], ncols =
         
         ax.set_title(f"n={len(clust_data)}")
     return fig, axes
-        
-## usage:
-pts_wclust=read_from_cloud('2year_minrange02_dtw_4h_wclust.csv')
-aggloDTW_labels = pts_wclust['cluster'].replace({3: 0, 1 : 0, 2:0, 7 :1, 6:1})
-plot_cluster_pattern_plots(scaled_variable, aggloDTW_labels, ncols=1)
-plt.tight_layout()
-
-
-########## Add in inconsistent missingness
-aggloDTW_labels
-mod_aggloDTW_labels = aggloDTW_labels.copy()
-label_map = {0: 2, 1:3, 2:0, 3:1, 4:0}
-for original_value, mod_value in label_map.items():
-    mod_aggloDTW_labels[aggloDTW_labels == original_value] = mod_value
-
-flat_rows = data_matrix[row_ranges < min_range]
-flat_missing_level = flat_rows.mean(axis=1)
-
-flat_low_missing = flat_rows[flat_missing_level <= 0.5]
-flat_high_missing = flat_rows[flat_missing_level > 0.5]
-# scaled_flat = StandardScaler(with_std=False).fit_transform(flat_rows.T).T
-# scaled_flat = flat_rows
-all_scaled = np.concatenate([scaled_variable, flat_low_missing, flat_high_missing])
-low_missing_labels = np.full(len(flat_low_missing), 999)
-high_missing_labels = np.full(len(flat_high_missing), 998)
-# unclustered_labels = np.full(len(scaled_flat), 999)
-all_labels = np.concatenate([mod_aggloDTW_labels, low_missing_labels, high_missing_labels])
-
-plot_cluster_pattern_plots(all_scaled, all_labels, noscale_labels = [998, 999], ncols=1)
-plt.tight_layout()
-plt.savefig('fig2b.pdf')
