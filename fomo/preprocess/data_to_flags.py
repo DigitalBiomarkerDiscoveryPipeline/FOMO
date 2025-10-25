@@ -30,14 +30,20 @@ def flag_missing_data(df : pd.DataFrame, start_date = None, end_date = None, tim
     # convert time_col to pandas datetime    
     df[time_col] = pd.to_datetime(df[time_col])
 
-    # TODO: resample time_col to given freq .dt.floor(freq) should do it
-    
-    # check if start_date and end_date are defined
+    # Resample time_col to given freq
+    df[time_col] = df[time_col].dt.floor(freq)
+
+    # Check if start_date and end_date are defined
+    # If they are, make sure start_date and end_date are pandas Timestamp types 
     if start_date is None:
         start_date = df[time_col].min()
+    else:
+        start_date = pd.to_datetime(start_date)
     
     if end_date is None:
         end_date = df[time_col].max()
+    else:
+        end_date = pd.to_datetime(end_date)
 
     # shift start_date and end_date to the start/end of their days
     start_date = start_date.replace(hour=0, minute=0)
