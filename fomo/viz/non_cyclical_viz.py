@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
 
-class MissingPatternPlot:
+class MissingMatrixPlot:
     """wrapper class to draw a heatmap of missingness for a given matrix"""
     sort = ['person_id', 'missingness', 'cluster']
     direction = ['increasing', 'decreasing']
