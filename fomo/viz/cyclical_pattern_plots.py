@@ -23,8 +23,8 @@ def plot_time_series_by_cluster(time_series, labels, ylim=(0,1), ncols=5):
         axs.flatten()[i].set_title(f"Time Series in Cluster {label}")
     return fig, axs
 
-def day_cluster_pattern_plots(time_series_matrix, labels, axes, noscale_labels = [], ncols = 1):
-    '''Plot all day-level pattern plot 1-D heatmaps based on cluster labels.
+def cluster_pattern_plots(time_series_matrix, labels, axes = None, noscale_labels = [], ncols = 1):
+    '''Plot day-level (1D) or week-level (2D) pattern plot heatmaps as the barycenter of each cluster.
     
     Parameters
     ----------
@@ -62,14 +62,14 @@ def day_cluster_pattern_plots(time_series_matrix, labels, axes, noscale_labels =
             scaled_barycenter = barycenter.flatten()
         else:
             scaled_barycenter = MinMaxScaler().fit_transform(barycenter).flatten()
-        if len(scaled_barycenter.shape) == 2: # day level plotting
+        if len(scaled_barycenter.shape) == 1: # day level plotting
             cax = ax.pcolormesh(np.expand_dims(scaled_barycenter,axis=0), cmap='Blues_r',
                             vmin = 0,
                             vmax = 1)#, edgecolors='k', linewidth=0.1)
             ax.set_yticks([0,1])
             ax.set_yticklabels([' ', ' '])
 
-        elif len(scaled_barycenter.shape) == 3: # week level plotting
+        elif len(scaled_barycenter.shape) == 2: # week level plotting
             cax = ax.pcolormesh(scaled_barycenter[::-1], cmap='Blues_r',
                            vmin = 0,
                            vmax = 1)#, edgecolors='k', linewidth=0.1)
