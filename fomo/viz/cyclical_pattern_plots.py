@@ -23,7 +23,7 @@ def plot_time_series_by_cluster(time_series, labels, ylim=(0,1), ncols=5):
         axs.flatten()[i].set_title(f"Time Series in Cluster {label}")
     return fig, axs
 
-def plot_day_cluster_pattern_plots(time_series_matrix, labels, axes, noscale_labels = [], ncols = 1):
+def day_cluster_pattern_plots(time_series_matrix, labels, axes, noscale_labels = [], ncols = 1):
     '''Plot all day-level pattern plot 1-D heatmaps based on cluster labels.
     
     Parameters
@@ -103,5 +103,5 @@ high_missing_labels = np.full(len(flat_high_missing), 998)
 all_labels = np.concatenate([mod_aggloDTW_labels, low_missing_labels, high_missing_labels])
 
 plot_cluster_pattern_plots(all_scaled, all_labels, noscale_labels = [998, 999], ncols=1)
-plt.tight_layout()
-plt.savefig('fig2b.pdf')
+# plt.tight_layout()
+# plt.savefig('fig2b.pdf')
