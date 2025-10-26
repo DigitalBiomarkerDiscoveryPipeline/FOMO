@@ -150,7 +150,7 @@ def rolling_day_pattern(flagged_df, time_column=None, basis_rate=15, missingness
     if 24*60 % missingness_interval: raise ValueError('missingness_interval should be chosen such that it divides one day into an integer number of intervals')
     
     # Convert Missing_Flag to integer to calculate percentages later
-    flagged_df['Missing_Flag'] = flagged_df['Missing_Flag'].astype(int)
+    flagged_df[missing_flags_column] = flagged_df[missing_flags_column].astype(int)
     
     if time_column is not None:
         matrix = flagged_df.set_index(time_column)
