@@ -25,7 +25,7 @@ def plot_time_series_by_cluster(time_series, labels, ylim=(0,1), ncols=5):
         axs.flatten()[i].set_title(f"Time Series in Cluster {label}")
     return fig, axs
 
-def cluster_pattern_plots(pattern_matrix, labels, axes = None, noscale_labels = [], ncols = 1, show_colorbar=True, gamma=1.):
+def cluster_pattern_plots(pattern_matrix, labels, axes = None, noscale_labels = [], ncols = 1, show_colorbar=True, colorbar_kwargs = dict(), gamma=1.):
     '''Plot day-level (1D) or week-level (2D) pattern plot heatmaps as the barycenter of each cluster.
     
     Parameters
@@ -98,5 +98,5 @@ def cluster_pattern_plots(pattern_matrix, labels, axes = None, noscale_labels = 
         # Make a colorbar that always shows the full range of the colormap
         norm = mcolors.Normalize(vmin=0, vmax=1)
         mappable = cm.ScalarMappable(norm=norm, cmap='Blues_r')
-        fig.colorbar(mappable, ax=axes.flatten())
+        fig.colorbar(mappable, ax=axes.flatten(), **colorbar_kwargs)
     return fig, axes
