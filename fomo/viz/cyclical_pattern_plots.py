@@ -5,7 +5,7 @@ from sklearn.preprocessing import MinMaxScaler
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 
-def plot_time_series_by_cluster(time_series, labels, ylim=(0,1), ncols=5):
+def plot_time_series_by_cluster(time_series, labels, ylim=(0,1), ncols=5, gamma=1.):
     """Patterns as line plots"""
     unique_labels = np.unique(labels)
     nrows = int(np.ceil(len(unique_labels) / ncols))
@@ -19,7 +19,7 @@ def plot_time_series_by_cluster(time_series, labels, ylim=(0,1), ncols=5):
             axs.flatten()[i].plot(time_series[idx], "k-", alpha=0.2, label=f"Cluster {label} - Series {idx}")
             cluster_series.append(time_series[idx])
         
-        barycenter = softdtw_barycenter(cluster_series, gamma=1., max_iter=50, tol=1e-3)
+        barycenter = softdtw_barycenter(cluster_series, gamma=gamma, max_iter=50, tol=1e-3)
         axs.flatten()[i].plot(barycenter, "r-", linewidth=2, label=f"Barycenter {label}")
         axs.flatten()[i].set_ylim(ylim)
         axs.flatten()[i].set_title(f"Time Series in Cluster {label}")
@@ -100,6 +100,7 @@ def cluster_pattern_plots(pattern_matrix, labels, axes = None, noscale_labels = 
         ax.set_title(f"n={len(clust_data)}")
         
     if show_colorbar:
+        plt.tight_layout() # call tight_layout() before making the colorbar
         # Make a colorbar that always shows the full range of the colormap
         norm = mcolors.Normalize(vmin=0, vmax=1)
         mappable = cm.ScalarMappable(norm=norm, cmap='Blues_r')
