@@ -256,9 +256,9 @@ def rolling_day_pattern_fast(flagged_df, time_column=None, basis_rate=15, missin
     flagged_df['Missing_Flag'] = flagged_df['Missing_Flag'].astype(int)
     
     if time_column is not None:
-        matrix = flagged_df.set_index(time_column)
+        flagged_df = flagged_df.set_index(time_column)
     else:
-        matrix = flagged_df.sort_index()
+        flagged_df = flagged_df.sort_index()
         if flagged_df.index.name is None:
             time_column = 'index'
         else:
