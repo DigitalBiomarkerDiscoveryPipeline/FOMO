@@ -2,6 +2,40 @@
 import pandas as pd
 import numpy as np
 def rolling_week_pattern(flagged_df, time_column=None, basis_rate=15, missingness_interval=60, n_weeks=1, n_overlap=0, missing_flags_column = 'Missing_Flag', return_index=False):
+    """Calculate week patterns in a rolling window through a flagged time series.
+    Note: removes weeks at the start of the time series if they don't have full Sunday-Saturday flags.
+
+    Parameters
+    ----------
+    flagged_df: pd.DataFrame 
+        DataFrame of a time series of missingness flags with datetime index or column.
+        Use `preprocess.flag_missing_data()` to turn a time series into a flagged time series.
+    time_column: str
+        Name of column in `flagged_df` which has the datetime labels. If None, the index will be used.
+        (use pd.to_datetime() to make the dtype datetime)
+    basis_rate: int
+        The sampling period in `flagged_df` in minutes. Same as `freq` parameter from `preprocess.flag_missing_data()`
+    missingness_interval: int
+        Desired output sampling period, in minutes. Should be a whole-number multiple of `basis_rate`.
+        When larger than `basis_rate`, values will be mean-aggregated to represent fractional missingness.
+    n_weeks: int
+        Length of the rolling window, in weeks.
+    n_overlap: int
+        Number of weeks to overlap between windows, when n_weeks is >1. 
+    missing_flags_column: str
+        Name of column in `flagged_df` which has the binary indicator of missingness
+    return_index: bool (default False)
+        When True, will return array of timestamps corresponding to the start time of each pattern.
+
+    Returns
+    -------
+    means_withstride: np.array
+        Array of week patterns.
+
+    (optional)
+    timestamps: np.array
+        Only returned if `return_index`=True. Array of timestamps corresponding to the start of each window in `means_withstride`
+    """
     if n_overlap >= n_weeks: raise ValueError("n_overlap should be less than n_weeks")
     if missingness_interval < basis_rate: raise ValueError("missingness_interval should be >= basis_rate")
     if missingness_interval % basis_rate: raise ValueError('missingness_interval should be a multiple of basis_rate')
@@ -74,17 +108,41 @@ def rolling_week_pattern(flagged_df, time_column=None, basis_rate=15, missingnes
 
 
 def rolling_day_pattern(flagged_df, time_column=None, basis_rate=15, missingness_interval=60, n_days=1, n_overlap=0, missing_flags_column = 'Missing_Flag', full_weeks_only=False, return_index=False):
-    """Turn flagged time series into array of day patterns
-    flagged_df: pd dataframe with time series index or column 
-    time_column: which column is the datetime labels. If None, the index will be used. (use pd.to_datetime() to make the dtype datetime)
-    basis_rate: minute sampling period from flagged_df
-    missingness_interval: target period of missingness (when larger than basis rate, will get mean)
-    n_days: number of days to use for pattern
-    n_overlap: number of days to overlap, when n_days is >1 
-    missing_flags_column: which column in flagged_df is the binary indicator of missingness
-    full_weeks_only: when True, will remove incomplete sunday-saturday weeks from the end and start of the time series
-        * e.g. n_days=7, n_overlap=0, full_weeks_only=True will make average patterns from Sunday-Saturday periods
-    return_index: when True, will return time series labels (for start of each pattern)
+    """Calculate day patterns in a rolling window through a flagged time series.
+
+    Parameters
+    ----------
+    flagged_df: pd.DataFrame 
+        DataFrame of a time series of missingness flags with datetime index or column.
+        Use `preprocess.flag_missing_data()` to turn a time series into a flagged time series.
+    time_column: str
+        Name of column in `flagged_df` which has the datetime labels. If None, the index will be used.
+        (use pd.to_datetime() to make the dtype datetime)
+    basis_rate: int
+        The sampling period in `flagged_df` in minutes. Same as `freq` parameter from `preprocess.flag_missing_data()`
+    missingness_interval: int
+        Desired output sampling period, in minutes. Should be a whole-number multiple of `basis_rate`.
+        When larger than `basis_rate`, values will be mean-aggregated to represent fractional missingness.
+    n_days: int
+        Length of the rolling window, in days.
+    n_overlap: int
+        Number of days to overlap between windows, when n_days is >1. 
+    missing_flags_column: str
+        Name of column in `flagged_df` which has the binary indicator of missingness
+    full_days_only: bool
+        When True, will remove incomplete sunday-saturday days from the end and start of the time series.
+        * e.g. n_days=7, n_overlap=0, full_days_only=True will make average patterns from Sunday-Saturday periods
+    return_index: bool (default False)
+        When True, will return array of timestamps corresponding to the start time of each pattern.
+
+    Returns
+    -------
+    means_withstride: np.array
+        Array of day patterns.
+
+    (optional)
+    timestamps: np.array
+        Only returned if `return_index`=True. Array of timestamps corresponding to the start of each window in `means_withstride`
     """
     if n_overlap >= n_days: raise ValueError("n_overlap should be less than n_days")
     if missingness_interval < basis_rate: raise ValueError("missingness_interval should be >= basis_rate")
