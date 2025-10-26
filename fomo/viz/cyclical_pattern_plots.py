@@ -43,6 +43,11 @@ def cluster_pattern_plots(pattern_matrix, labels, axes = None, noscale_labels = 
         Number of columns in figure. The number of rows will be calculated to fit the number of unique patterns
     show_colorbar: bool (default: True)
         If true, shows a colorbar on the right of the figure. Colorbar will always use the full range of the cmap.
+    colorbar_kwargs: dict (default: {})
+        Dictionary of kwargs to be sent to fig.colorbar()
+        Can include parameters like `shrink` to shrink the size of the colorbar, or `label` to add a label on colorbar.
+    gamma: float (default: 1.)
+        Gamma value for finding barycenter. Should be smaller, the smaller the size of each cluster.
     
     Returns
     -------
